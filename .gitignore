@@ -1,0 +1,33 @@
+
+.venv/
+__pycache__/
+*.pyc
+.Rhistory
+.RData
+.DS_Store
+
+# Python: archivos compilados que se generan solos
+__pycache__/
+*.pyc
+*Zone.Identifier
+# Resultados: se regeneran al ejecutar el script
+resultados.csv
+resultados.png
+
+# Entornos virtuales (si alguien crea uno)
+venv/
+.venv/
+
+# Archivos del sistema y de editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+intento_servidor/ors-files/
+intento_servidor/ors-logs/
+
+punto_2/parte_2/recoleccion_datos/ors-files/
+punto_2/parte_2/recoleccion_datos/ors-logs/
+
+*.osm.pbf
