@@ -85,3 +85,7 @@ models/            modelos entrenados (la app los carga sin reentrenar)
 app/               aplicación web (Streamlit)
 reports/figures/   figuras regenerables desde el código
 ```
+
+## Red neuronal del punto 2
+
+Para preparar la LGD desde `loan.csv` y entrenar con la red de Manuel, consulte [Punto_2/RED_NEURONAL.md](Punto_2/RED_NEURONAL.md).
