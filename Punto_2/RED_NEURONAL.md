@@ -31,3 +31,7 @@ python -m pytest -q
 La demostración necesita el parquet preparado; su duración debe medirse con los datos reales. No hay datos crediticios en este checkout: las pruebas usan datos sintéticos y no validan desempeño crediticio. Quedan pendientes los experimentos reales, búsqueda justificada, 30 semillas, pérdida esperada, figuras y aplicación final. Esta integración no presenta esos requisitos como cumplidos.
 
 Para generar la evaluación y estudiar la combinación con PD, consulte [Evaluación y pérdida esperada](EVALUACION_Y_PERDIDA_ESPERADA.md).
+
+## Notebook integrado
+
+Abra [Modelos/Punto_2_completo.ipynb](Modelos/Punto_2_completo.ipynb) con el kernel de `.venv`. Reúne construcción de LGD proxy, OLS, búsqueda de red de Manuel, réplicas, figuras y pérdida esperada con requisitos comprobados. Empieza en DEMO; cambie `DEMO = False` para 30 semillas. Para instalar el soporte del kernel: `python -m pip install ipykernel` dentro de ese entorno.
