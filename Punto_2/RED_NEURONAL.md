@@ -29,3 +29,5 @@ python -m pytest -q
 ```
 
 La demostración necesita el parquet preparado; su duración debe medirse con los datos reales. No hay datos crediticios en este checkout: las pruebas usan datos sintéticos y no validan desempeño crediticio. Quedan pendientes los experimentos reales, búsqueda justificada, 30 semillas, pérdida esperada, figuras y aplicación final. Esta integración no presenta esos requisitos como cumplidos.
+
+Para generar la evaluación y estudiar la combinación con PD, consulte [Evaluación y pérdida esperada](EVALUACION_Y_PERDIDA_ESPERADA.md).
