@@ -34,4 +34,6 @@ Para generar la evaluación y estudiar la combinación con PD, consulte [Evaluac
 
 ## Notebook integrado
 
-Abra [Modelos/Punto_2_completo.ipynb](Modelos/Punto_2_completo.ipynb) con el kernel de `.venv`. Reúne construcción de LGD proxy, OLS, búsqueda de red de Manuel, réplicas, figuras y pérdida esperada con requisitos comprobados. Empieza en DEMO; cambie `DEMO = False` para 30 semillas. Para instalar el soporte del kernel: `python -m pip install ipykernel` dentro de ese entorno.
+Abra [Modelos/Punto_2_completo.ipynb](Modelos/Punto_2_completo.ipynb) con el kernel de `.venv`. Reúne construcción de LGD proxy, OLS, búsqueda de red de Manuel, réplicas, figuras y pérdida esperada con requisitos comprobados. Por defecto ejecuta `DEMO = False` con 30 semillas; use `DEMO = True` para una prueba corta. Para instalar el soporte del kernel: `python -m pip install ipykernel` dentro de ese entorno.
+
+El notebook genera la discusión numérica automáticamente. Si falta el modelo PD del equipo, puede entrenar una PD auxiliar con el CSV original (codificación exacta y particiones temporales <=2010/2011/2012) y guardarla aparte. Esto permite calcular la pérdida proxy, pero no sustituye los experimentos del punto 1 ni constituye validación independiente del producto PD×LGD: la cohorte puede solaparse con entrenamiento LGD.
