@@ -29,7 +29,8 @@ Thumbs.db
 intento_servidor/ors-files/
 intento_servidor/ors-logs/
 
-punto_2/parte_2/recoleccion_datos/ors-files/
-punto_2/parte_2/recoleccion_datos/ors-logs/
+Punto_2/parte_2/recoleccion_datos/ors-files/
+Punto_2/parte_2/recoleccion_datos/ors-logs/
+Punto_1/loan/loan.csv
 
 *.osm.pbf
