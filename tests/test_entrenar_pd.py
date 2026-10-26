@@ -29,10 +29,14 @@ def datos_sinteticos(n=3000, semilla=0):
         "revol_bal": rng.lognormal(9, 1, n),
         "revol_util": rng.uniform(0, 100, n),
         "total_acc": rng.integers(2, 60, n),
-        "home_ownership": rng.choice(["RENT", "OWN", "MORTGAGE"], n),
+        "home_ownership": rng.choice(["RENT", "OWN", "MORTGAGE", "OTHER"], n, p=[0.5, 0.1, 0.395, 0.005]),
         "purpose": rng.choice(["debt_consolidation", "credit_card", "other"], n),
     })
-    logit = -2 + 0.04 * df["dti"] + 0.6 * (df["term"] == 60) - 0.5 * np.log(df["annual_inc"] / 60000)
+    # columnas como las deja preparar_datos_pd.py (las de arriba se mantienen para la LGD)
+    df["antig_credito_meses"] = df["antiguedad_credito_meses"].round()
+    df["nunca_mora"] = df["mths_since_last_delinq"].isna().astype(int)
+    df["emp_length_na"] = 0
+    logit = -2 + 0.04 * df["dti"] + 0.5 * df["inq_last_6mths"] - 0.5 * np.log(df["annual_inc"] / 60000)
     df["y"] = (rng.random(n) < 1 / (1 + np.exp(-logit))).astype(int)
     df["particion"] = rng.choice(["train", "valid", "test"], n, p=[0.6, 0.2, 0.2])
     return df
