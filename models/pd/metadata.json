@@ -1,0 +1,260 @@
+{
+  "config": {
+    "semilla": 42,
+    "datos": {
+      "ruta": "data/processed/pd_limpio.parquet",
+      "objetivo": "y",
+      "particion": "particion",
+      "fraccion_demo": 0.2,
+      "numericas": [
+        "loan_amnt",
+        "emp_length",
+        "annual_inc",
+        "dti",
+        "delinq_2yrs",
+        "inq_last_6mths",
+        "mths_since_last_delinq",
+        "open_acc",
+        "pub_rec",
+        "revol_bal",
+        "revol_util",
+        "total_acc",
+        "antig_credito_meses"
+      ],
+      "con_tope": [
+        "delinq_2yrs",
+        "inq_last_6mths",
+        "open_acc",
+        "total_acc",
+        "antig_credito_meses",
+        "annual_inc",
+        "revol_bal"
+      ],
+      "logaritmicas": [
+        "annual_inc",
+        "revol_bal"
+      ],
+      "indicadoras": [
+        "nunca_mora",
+        "emp_length_na"
+      ],
+      "categoricas": [
+        "home_ownership",
+        "purpose"
+      ],
+      "frecuencia_minima": 0.01
+    },
+    "red": {
+      "capas_ocultas": [
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "l2": 0.0014,
+      "dropout": 0.3
+    },
+    "entrenamiento": {
+      "optimizador": "adam",
+      "tasa": 0.0026,
+      "epocas": 200,
+      "tam_lote": 512,
+      "paciencia": 10
+    },
+    "scorecard": {
+      "puntaje_base": 600,
+      "odds_base": 50,
+      "pdo": 20
+    },
+    "salida": {
+      "carpeta": "models/pd"
+    }
+  },
+  "demo": false,
+  "variables_entrada": {
+    "numericas": [
+      "loan_amnt",
+      "emp_length",
+      "annual_inc",
+      "dti",
+      "delinq_2yrs",
+      "inq_last_6mths",
+      "mths_since_last_delinq",
+      "open_acc",
+      "pub_rec",
+      "revol_bal",
+      "revol_util",
+      "total_acc",
+      "antig_credito_meses"
+    ],
+    "logaritmicas": [
+      "annual_inc",
+      "revol_bal"
+    ],
+    "con_tope": [
+      "delinq_2yrs",
+      "inq_last_6mths",
+      "open_acc",
+      "total_acc",
+      "antig_credito_meses",
+      "annual_inc",
+      "revol_bal"
+    ],
+    "indicadoras": [
+      "nunca_mora",
+      "emp_length_na"
+    ],
+    "categoricas": [
+      "home_ownership",
+      "purpose"
+    ]
+  },
+  "columnas_transformadas": [
+    "loan_amnt",
+    "emp_length",
+    "annual_inc",
+    "dti",
+    "delinq_2yrs",
+    "inq_last_6mths",
+    "mths_since_last_delinq",
+    "open_acc",
+    "pub_rec",
+    "revol_bal",
+    "revol_util",
+    "total_acc",
+    "antig_credito_meses",
+    "nunca_mora",
+    "emp_length_na",
+    "home_ownership_MORTGAGE",
+    "home_ownership_OWN",
+    "home_ownership_otras",
+    "purpose_car",
+    "purpose_credit_card",
+    "purpose_educational",
+    "purpose_home_improvement",
+    "purpose_major_purchase",
+    "purpose_medical",
+    "purpose_moving",
+    "purpose_other",
+    "purpose_small_business",
+    "purpose_vacation",
+    "purpose_wedding",
+    "purpose_otras"
+  ],
+  "categorias": {
+    "home_ownership": [
+      "MORTGAGE",
+      "OWN",
+      "RENT",
+      "otras"
+    ],
+    "purpose": [
+      "car",
+      "credit_card",
+      "debt_consolidation",
+      "educational",
+      "home_improvement",
+      "major_purchase",
+      "medical",
+      "moving",
+      "other",
+      "small_business",
+      "vacation",
+      "wedding",
+      "otras"
+    ]
+  },
+  "rangos": {
+    "loan_amnt": [
+      500.0,
+      35000.0
+    ],
+    "emp_length": [
+      0.0,
+      10.0
+    ],
+    "annual_inc": [
+      1896.0,
+      6000000.0
+    ],
+    "dti": [
+      0.0,
+      29.99
+    ],
+    "delinq_2yrs": [
+      0.0,
+      13.0
+    ],
+    "inq_last_6mths": [
+      0.0,
+      33.0
+    ],
+    "mths_since_last_delinq": [
+      0.0,
+      120.0
+    ],
+    "open_acc": [
+      1.0,
+      47.0
+    ],
+    "pub_rec": [
+      0.0,
+      2.0
+    ],
+    "revol_bal": [
+      0.0,
+      1207359.0
+    ],
+    "revol_util": [
+      0.0,
+      119.0
+    ],
+    "total_acc": [
+      1.0,
+      90.0
+    ],
+    "antig_credito_meses": [
+      6.0,
+      785.0
+    ]
+  },
+  "scorecard": {
+    "puntaje_base": 600,
+    "odds_base": 50,
+    "pdo": 20,
+    "factor": 28.85390081777927,
+    "offset": 487.1228762045055
+  },
+  "parametros_entrenables": 4097,
+  "mejor_epoca": 10,
+  "epocas_entrenadas": 20,
+  "segundos_entrenamiento": 3.94156691399985,
+  "metricas": {
+    "train": {
+      "auc": 0.6926252614308582,
+      "gini": 0.38525052286171646,
+      "ks": 0.27841195022150134,
+      "brier": 0.10157856555260902,
+      "entropia_cruzada": 0.3462382381694541,
+      "tasa_malos": 0.1229328677987621,
+      "n": 31505
+    },
+    "valid": {
+      "auc": 0.6383146628264834,
+      "gini": 0.27662932565296683,
+      "ks": 0.20085089368704773,
+      "brier": 0.11556433271032347,
+      "entropia_cruzada": 0.3870775433398283,
+      "tasa_malos": 0.13783657379568384,
+      "n": 14967
+    },
+    "test": {
+      "auc": 0.6251215160907339,
+      "gini": 0.2502430321814677,
+      "ks": 0.18537614065315833,
+      "brier": 0.11512458950743004,
+      "entropia_cruzada": 0.38683521213168426,
+      "tasa_malos": 0.1361304378382177,
+      "n": 28458
+    }
+  }
+}
