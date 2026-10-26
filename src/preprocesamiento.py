@@ -43,6 +43,11 @@ def construir_preprocesador(numericas, categoricas, logaritmicas=()):
     return ColumnTransformer(transformadores, verbose_feature_names_out=False)
 
 
+# Indicadoras que salen de una variable original: van con ella al permutarla, al calcular
+# sus puntos en la scorecard y en la app (un valor observado implica indicador 0).
+INDICADOR_DE = {"nunca_mora": "mths_since_last_delinq", "emp_length_na": "emp_length"}
+
+
 class PreprocesadorCredito:
     """Preprocesamiento de la Parte 1 (reglas de María Fernanda Valencia, Punto_1/).
 
@@ -129,3 +134,14 @@ class PreprocesadorCredito:
         for col in self.categoricas:
             nombres += [f"{col}_{c}" for c in self.categorias_[col] if c != self.referencia_[col]]
         return np.array(nombres, dtype=object)
+
+    def grupos(self):
+        """Columnas transformadas de cada variable original, p. ej.
+        {"purpose": [índices de sus dummies], "mths_since_last_delinq": [i, i_nunca_mora]}."""
+        nombres = list(self.get_feature_names_out())
+        grupos = {c: [nombres.index(c)] for c in self.numericas}
+        for ind in self.indicadoras:
+            grupos.setdefault(INDICADOR_DE.get(ind, ind), []).append(nombres.index(ind))
+        for col in self.categoricas:
+            grupos[col] = [i for i, n in enumerate(nombres) if n.startswith(f"{col}_")]
+        return grupos

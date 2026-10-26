@@ -34,12 +34,10 @@ import pandas as pd
 
 from evaluar_pd import COLORES, FIGURAS, TINTA_SUAVE, cargar_modelo, estilo, predecir
 from src import metricas
+from src.preprocesamiento import INDICADOR_DE
 
 # Columnas que se permutan juntas porque salen de la misma variable original
-GRUPOS = {
-    "mths_since_last_delinq": ["mths_since_last_delinq", "nunca_mora"],
-    "emp_length": ["emp_length", "emp_length_na"],
-}
+GRUPOS = {variable: [variable, indicador] for indicador, variable in INDICADOR_DE.items()}
 NOMBRES = {
     "loan_amnt": "Monto solicitado", "emp_length": "Antigüedad laboral",
     "annual_inc": "Ingreso anual", "dti": "Deuda / ingreso (dti)",

@@ -91,6 +91,8 @@ def entrenar(config, demo=False, verbose=True):
             "categoricas": d["categoricas"],
         },
         "columnas_transformadas": list(preprocesador.get_feature_names_out()),
+        # solicitante de referencia para los puntos por variable (src/scorecard.py)
+        "referencia_transformada": X_train.mean(axis=0).tolist(),
         # categorías que reconoce el modelo (las raras de train quedan en "otras")
         "categorias": preprocesador.categorias_,
         # la app limita cada campo a este rango para que la red no extrapole

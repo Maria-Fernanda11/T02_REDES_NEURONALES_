@@ -50,6 +50,7 @@ python entrenar_pd.py --set red.capas_ocultas= --set red.dropout=0 \
                       --set salida.carpeta=models/pd_logistica      # regresión logística de referencia
 python evaluar_pd.py                 # métricas en prueba y figuras (sin reentrenar)
 python interpretar_pd.py             # importancia por permutación y dependencia parcial
+python scorecard_pd.py               # puntos por variable (logística); --modelo models/pd para la red
 python buscar_hiperparametros_pd.py  # búsqueda aleatoria (~10 min) -> reports/busqueda_pd.csv
 python repetir_semillas_pd.py        # 30 semillas de la configuración final -> reports/
 ```
