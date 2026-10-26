@@ -35,3 +35,6 @@ Punto_1/loan/loan.csv
 Punto_2/loan/loan.csv
 
 *.osm.pbf
+
+# Datos originales de Kaggle (pesan demasiado; ver README)
+datos/
