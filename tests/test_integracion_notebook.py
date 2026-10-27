@@ -10,7 +10,8 @@ from preparar_lgd import preparar
 def muestra_temporal():
     d=pd.concat([muestra()]*4,ignore_index=True)
     d['id']=np.arange(len(d))
-    d['issue_d']=[['Jan-2010','Jan-2011','Jan-2012'][i%3] for i in range(len(d))]
+    # una fecha por partición de la PD: train (<= dic-2011), valid (ene-jun 2012), test (jul-dic 2012)
+    d['issue_d']=[['Jan-2010','Mar-2012','Sep-2012'][i%3] for i in range(len(d))]
     d['loan_status']=['Fully Paid' if i%2 else 'Charged Off' for i in range(len(d))]
     return d
 

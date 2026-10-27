@@ -11,7 +11,8 @@ import configparser
 import re
 
 # Claves cuyo valor siempre es una lista (aunque tenga un solo elemento o ninguno)
-CLAVES_LISTA = {"capas_ocultas", "numericas", "logaritmicas", "categoricas", "recortar_objetivo"}
+CLAVES_LISTA = {"capas_ocultas", "numericas", "logaritmicas", "categoricas", "recortar_objetivo",
+                "con_tope", "indicadoras"}
 
 
 def _convertir_escalar(texto):

@@ -2,36 +2,25 @@
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from preparar_lgd import transformar_predictoras
+from preparar_datos_pd import preparar as preparar_pd
 from src.configuracion import cargar_config
-
-ETIQUETAS_PD = {
-    'Fully Paid':0, 'Does not meet the credit policy. Status:Fully Paid':0,
-    'Charged Off':1, 'Default':1, 'Late (31-120 days)':1,
-    'Does not meet the credit policy. Status:Charged Off':1,
-}
-EXCLUIDOS_PD = {'Current','Issued','In Grace Period','Late (16-30 days)'}
 
 
 def preparar_pd_y_cohorte(bruto, salida):
-    """Años <=2010 train, 2011 valid, 2012 test, como el notebook de PD.
+    """Misma población y partición que el modelo PD del punto 1 (preparar_datos_pd.py):
+    solo créditos a 36 meses; train jun-2007 a dic-2011, valid ene-jun 2012,
+    test jul-dic 2012. Así la cohorte entra directo a models/pd.
 
     La cohorte común es test de PD. Puede solaparse con train de LGD, por lo que
     el producto no se presenta como evaluación independiente de pérdida esperada.
     """
     estados=bruto.loan_status.astype('string').str.strip()
-    desconocidos=set(estados.dropna().unique())-set(ETIQUETAS_PD)-EXCLUIDOS_PD
-    if desconocidos or estados.isna().any():
-        raise ValueError(f'loan_status ausente o no reconocido: {desconocidos}')
-    df=bruto.loc[estados.isin(ETIQUETAS_PD)].copy()
-    df['y']=estados.loc[df.index].map(ETIQUETAS_PD).astype(int)
-    df=transformar_predictoras(df)
-    fecha=pd.to_datetime(df.issue_d,format='%b-%Y',errors='raise')
-    df['particion']=np.select([fecha.dt.year<=2010,fecha.dt.year==2011,fecha.dt.year==2012],
-                              ['train','valid','test'],default='fuera')
+    if estados.isna().any():
+        raise ValueError('loan_status ausente')
+    # codificación del enunciado, plazo, partición y limpieza fija (falla si hay estados desconocidos)
+    df=preparar_pd(bruto)
     cfg=cargar_config('config.ini','pd')['datos']
-    columnas=list(dict.fromkeys(cfg['numericas']+cfg['categoricas']))
-    df=df.loc[df.particion!='fuera'].copy()
+    columnas=list(dict.fromkeys(cfg['numericas']+cfg['indicadoras']+cfg['categoricas']))
     for nombre in ['train','valid','test']:
         parte=df.loc[df.particion==nombre]
         if parte.empty or set(parte.y.unique())!={0,1}:

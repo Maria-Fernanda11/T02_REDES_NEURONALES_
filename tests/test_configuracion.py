@@ -13,12 +13,14 @@ from tests.test_entrenar_pd import datos_sinteticos
 def test_config_ini_del_repositorio():
     pd_config = cargar_config("config.ini", "pd")
     assert pd_config["semilla"] == 42
-    assert pd_config["red"]["capas_ocultas"] == [32, 16]
-    assert pd_config["red"]["l2"] == pytest.approx(0.0001)
+    assert pd_config["red"]["capas_ocultas"] == [64, 32]
+    assert pd_config["red"]["l2"] == pytest.approx(0.0014)
     assert pd_config["entrenamiento"]["optimizador"] == "adam"
     assert pd_config["scorecard"] == {"puntaje_base": 600, "odds_base": 50, "pdo": 20}
-    assert len(pd_config["datos"]["numericas"]) == 15   # lista en varias líneas
-    assert "antiguedad_credito_meses" in pd_config["datos"]["numericas"]
+    assert len(pd_config["datos"]["numericas"]) == 13   # lista en varias líneas
+    assert "antig_credito_meses" in pd_config["datos"]["numericas"]
+    assert pd_config["datos"]["indicadoras"] == ["nunca_mora", "emp_length_na"]
+    assert len(pd_config["datos"]["con_tope"]) == 7     # lista con comentario en la 1.ª línea
 
     lgd_config = cargar_config("config.ini", "lgd")
     assert lgd_config["red"]["perdida"] == "ecm"
@@ -43,7 +45,7 @@ def test_editar_el_ini_cambia_el_modelo(tmp_path):
     ruta_ini = tmp_path / "config.ini"
     shutil.copy("config.ini", ruta_ini)
     texto = ruta_ini.read_text(encoding="utf-8")
-    texto = texto.replace("capas_ocultas = 32, 16          # neuronas por capa oculta",
+    texto = texto.replace("capas_ocultas = 64, 32          # neuronas por capa oculta",
                           "capas_ocultas = 5          # neuronas por capa oculta")
     texto = texto.replace("ruta = data/processed/pd_limpio.parquet", f"ruta = {ruta_datos}")
     texto = texto.replace("carpeta = models/pd ", f"carpeta = {tmp_path / 'modelo'} ")

@@ -20,6 +20,7 @@ p = sigmoide(z), el puntaje es lineal en la salida antes de la sigmoide:
 """
 
 import numpy as np
+import pandas as pd
 
 
 class Scorecard:
@@ -54,3 +55,38 @@ def percentil(puntaje, puntajes_poblacion):
     """Porcentaje de la población con un puntaje menor o igual al dado (0 a 100)."""
     poblacion = np.sort(np.asarray(puntajes_poblacion, dtype=float))
     return 100.0 * np.searchsorted(poblacion, puntaje, side="right") / len(poblacion)
+
+
+def puntos_por_variable(red, scorecard, X_transformada, referencia, grupos):
+    """Cuántos puntos aporta cada variable al puntaje de cada crédito.
+
+    Los puntos de una variable son lo que cambia el puntaje si a esa variable (todas sus
+    columnas transformadas) se le pone el valor del solicitante de referencia, que es el
+    promedio de train en el espacio transformado:
+        puntos_j(x) = puntaje(x) - puntaje(x con el grupo j en la referencia)
+    Positivo = la variable sube el puntaje (menos riesgo) frente al solicitante promedio.
+
+    Regresión logística: logit(p) = b0 + sum_j w_j x_j, y el puntaje es lineal en el logit
+    (puntaje = offset - factor * logit), así que
+        puntos_j(x) = -factor * w_j (x_j - x_ref_j)
+        puntaje(x)  = puntaje(x_ref) + sum_j puntos_j(x)      exactamente.
+    Esa es la scorecard aditiva clásica, con variables continuas.
+
+    Red neuronal: el logit no es una suma de efectos por variable, así que los puntos no suman
+    exactamente el total. La diferencia (interaccion) mide cuánto del puntaje depende de
+    combinaciones de variables.
+
+    Devuelve (base, puntos, interaccion): base = puntaje del solicitante de referencia,
+    puntos = DataFrame (créditos x variables), interaccion = total - base - suma de puntos.
+    """
+    X = np.atleast_2d(np.asarray(X_transformada, dtype=float))
+    referencia = np.asarray(referencia, dtype=float)
+    total = scorecard.puntaje(red.predecir(X))
+    base = float(scorecard.puntaje(red.predecir(referencia[None, :]))[0])
+    puntos = {}
+    for variable, columnas in grupos.items():
+        X_ref = X.copy()
+        X_ref[:, columnas] = referencia[columnas]
+        puntos[variable] = total - scorecard.puntaje(red.predecir(X_ref))
+    puntos = pd.DataFrame(puntos)
+    return base, puntos, total - base - puntos.sum(axis=1).to_numpy()

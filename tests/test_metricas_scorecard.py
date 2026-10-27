@@ -63,3 +63,41 @@ def test_percentil():
     assert percentil(50, poblacion) == pytest.approx(50)
     assert percentil(0, poblacion) == 0
     assert percentil(1000, poblacion) == 100
+
+
+def test_puntos_por_variable_suman_el_puntaje_en_la_logistica():
+    from src.red_neuronal import RedNeuronal
+    from src.scorecard import puntos_por_variable
+
+    rng = np.random.default_rng(3)
+    X = rng.normal(size=(50, 5))
+    grupos = {"a": [0], "b": [1, 2], "c": [3, 4]}
+    sc = Scorecard(600, 50, 20)
+
+    logistica = RedNeuronal(5, capas_ocultas=(), semilla=1)
+    base, puntos, interaccion = puntos_por_variable(logistica, sc, X, X.mean(axis=0), grupos)
+    total = sc.puntaje(logistica.predecir(X))
+    assert np.allclose(base + puntos.sum(axis=1) + interaccion, total)
+    assert np.abs(interaccion).max() < 1e-8
+    # puntos_j = -factor * w_j (x_j - x_ref_j)
+    w = logistica.W[0].ravel()
+    assert np.allclose(puntos["a"], -sc.factor * w[0] * (X[:, 0] - X[:, 0].mean()))
+
+    red = RedNeuronal(5, capas_ocultas=(8,), activacion="tanh", semilla=1)
+    red.W = [W * 3 for W in red.W]           # pesos grandes: interacciones visibles
+    _, _, interaccion = puntos_por_variable(red, sc, X, X.mean(axis=0), grupos)
+    assert np.abs(interaccion).max() > 1e-3
+
+
+def test_grupos_cubren_cada_columna_una_vez():
+    import pandas as pd
+    from src.preprocesamiento import PreprocesadorCredito
+
+    rng = np.random.default_rng(0)
+    df = pd.DataFrame({"emp_length": rng.uniform(0, 10, 200), "dti": rng.uniform(0, 30, 200),
+                       "emp_length_na": rng.integers(0, 2, 200),
+                       "purpose": rng.choice(["a", "b", "c"], 200)})
+    pre = PreprocesadorCredito(["emp_length", "dti"], ["purpose"], indicadoras=["emp_length_na"]).fit(df)
+    grupos = pre.grupos()
+    assert grupos["emp_length"] == [0, 2]                  # la indicadora va con su variable
+    assert sorted(i for cols in grupos.values() for i in cols) == list(range(len(pre.get_feature_names_out())))

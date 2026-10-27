@@ -41,6 +41,26 @@ guardan en `data/processed/`.
 Todos los hiperparámetros están en **`config.ini`**. Se edita un valor, se guarda y se vuelve
 a ejecutar; no hay que tocar el código.
 
+### Parte 1, de punta a punta
+
+```bash
+python preparar_datos_pd.py          # loan.csv -> data/processed/pd_limpio.parquet (ya incluido en el repo)
+python entrenar_pd.py                # MLP final -> models/pd
+python entrenar_pd.py --set red.capas_ocultas= --set red.dropout=0 \
+                      --set salida.carpeta=models/pd_logistica      # regresión logística de referencia
+python evaluar_pd.py                 # métricas en prueba y figuras (sin reentrenar)
+python interpretar_pd.py             # importancia por permutación y dependencia parcial
+python scorecard_pd.py               # puntos por variable (logística); --modelo models/pd para la red
+python buscar_hiperparametros_pd.py  # búsqueda aleatoria (~10 min) -> reports/busqueda_pd.csv
+python repetir_semillas_pd.py        # 30 semillas de la configuración final -> reports/
+```
+
+Datos de la Parte 1: solo créditos a 36 meses, con partición temporal por fecha de
+originación (train jun-2007 a dic-2011, valid ene-jun 2012, test jul-dic 2012). La
+justificación está en el docstring de `preparar_datos_pd.py` y en el reporte.
+
+### Comandos generales
+
 ```bash
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
@@ -82,10 +102,12 @@ datos/             datos originales de Kaggle (no se suben al repo)
 data/processed/    datos procesados que usan los modelos
 src/               código: limpieza, red neuronal, scorecard, métricas
 models/            modelos entrenados (la app los carga sin reentrenar)
+reports/           resultados de la Parte 1 (búsqueda, semillas, evaluación, scorecard)
+reports/figures/   figuras regenerables con evaluar_pd.py e interpretar_pd.py
 ```
 
 ## Red neuronal del punto 2
 
 Para preparar la LGD desde `loan.csv` y entrenar con la red de Manuel, consulte [Punto_2/RED_NEURONAL.md](Punto_2/RED_NEURONAL.md).
 
-La aplicación web y la generación de figuras quedan pendientes de implementación; no se incluyen carpetas vacías ni dependencias para esas funcionalidades futuras.
+La aplicación web queda pendiente de implementación; no se incluyen carpetas vacías ni dependencias para ella todavía.

@@ -27,7 +27,7 @@ import pandas as pd
 
 from src import metricas
 from src.configuracion import cargar_config, imprimir_config
-from src.preprocesamiento import construir_preprocesador
+from src.preprocesamiento import PreprocesadorCredito
 from src.red_neuronal import RedNeuronal
 from src.scorecard import Scorecard
 
@@ -40,7 +40,7 @@ def cargar_datos(config, demo):
     if demo:
         df = (df.groupby(d["particion"], group_keys=False)
                 .sample(frac=d["fraccion_demo"], random_state=config["semilla"]))
-    variables = list(dict.fromkeys(d["numericas"] + d["categoricas"]))
+    variables = list(dict.fromkeys(d["numericas"] + d.get("indicadoras", []) + d["categoricas"]))
     return {
         nombre: (parte[variables], parte[d["objetivo"]].to_numpy(dtype=float))
         for nombre, parte in df.groupby(d["particion"])
@@ -57,7 +57,10 @@ def entrenar(config, demo=False, verbose=True):
     if faltantes:
         raise ValueError(f"Faltan particiones en los datos: {sorted(faltantes)}")
 
-    preprocesador = construir_preprocesador(d["numericas"], d["categoricas"], d["logaritmicas"])
+    preprocesador = PreprocesadorCredito(
+        d["numericas"], d["categoricas"], logaritmicas=d["logaritmicas"],
+        con_tope=d["con_tope"], indicadoras=d["indicadoras"],
+        frecuencia_minima=d["frecuencia_minima"])
     X = {"train": preprocesador.fit_transform(datos["train"][0])}
     X.update({nombre: preprocesador.transform(datos[nombre][0]) for nombre in ("valid", "test")})
     X_train = X["train"]
@@ -83,13 +86,17 @@ def entrenar(config, demo=False, verbose=True):
         "variables_entrada": {
             "numericas": d["numericas"],
             "logaritmicas": d["logaritmicas"],
+            "con_tope": d["con_tope"],
+            "indicadoras": d["indicadoras"],
             "categoricas": d["categoricas"],
         },
         "columnas_transformadas": list(preprocesador.get_feature_names_out()),
-        "categorias": {
-            col: sorted(map(str, datos["train"][0][col].dropna().unique()))
-            for col in d["categoricas"]
-        },
+        # solicitante de referencia para los puntos por variable (src/scorecard.py)
+        "referencia_transformada": X_train.mean(axis=0).tolist(),
+        # categorías que reconoce el modelo (las raras de train quedan en "otras")
+        "categorias": preprocesador.categorias_,
+        # la app limita cada campo a este rango para que la red no extrapole
+        # (p. ej. dti: el máximo en train es ~30, pero en 2012-S2 llega a 35)
         "rangos": {
             col: [float(datos["train"][0][col].min()), float(datos["train"][0][col].max())]
             for col in d["numericas"]
