@@ -86,6 +86,18 @@ python entrenar_lgd.py --set red.capas_ocultas= --set red.salida=identidad \
 
 La red neuronal está implementada desde cero con NumPy en `src/red_neuronal.py`.
 
+## Aplicación web
+
+```bash
+streamlit run app/app.py         # se abre en http://localhost:8501
+```
+
+Una persona ingresa sus datos y obtiene su puntaje, su probabilidad de incumplimiento, su
+percentil frente a la población, qué características le suman o restan puntos y cómo cambiaría su
+puntaje si cambiara alguna. La página «Cómo funciona» explica el modelo. Carga los modelos de
+`models/` (no reentrena). El modelo principal y los enlaces al reporte y al video se configuran en
+la sección `[app]` de `config.ini`.
+
 ## Pruebas
 
 ```bash
@@ -102,6 +114,7 @@ datos/             datos originales de Kaggle (no se suben al repo)
 data/processed/    datos procesados que usan los modelos
 src/               código: limpieza, red neuronal, scorecard, métricas
 models/            modelos entrenados (la app los carga sin reentrenar)
+app/               aplicación web (Streamlit): app.py, evaluar.py, como_funciona.py, motor.py
 reports/           resultados de la Parte 1 (búsqueda, semillas, evaluación, scorecard)
 reports/figures/   figuras regenerables con evaluar_pd.py e interpretar_pd.py
 ```
@@ -110,4 +123,3 @@ reports/figures/   figuras regenerables con evaluar_pd.py e interpretar_pd.py
 
 Para preparar la LGD desde `loan.csv` y entrenar con la red de Manuel, consulte [Punto_2/RED_NEURONAL.md](Punto_2/RED_NEURONAL.md).
 
-La aplicación web queda pendiente de implementación; no se incluyen carpetas vacías ni dependencias para ella todavía.

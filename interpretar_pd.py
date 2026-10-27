@@ -35,19 +35,10 @@ import pandas as pd
 from evaluar_pd import COLORES, FIGURAS, TINTA_SUAVE, cargar_modelo, estilo, predecir
 from src import metricas
 from src.preprocesamiento import INDICADOR_DE
+from src.variables import NOMBRES
 
 # Columnas que se permutan juntas porque salen de la misma variable original
 GRUPOS = {variable: [variable, indicador] for indicador, variable in INDICADOR_DE.items()}
-NOMBRES = {
-    "loan_amnt": "Monto solicitado", "emp_length": "Antigüedad laboral",
-    "annual_inc": "Ingreso anual", "dti": "Deuda / ingreso (dti)",
-    "delinq_2yrs": "Moras en 2 años", "inq_last_6mths": "Consultas en 6 meses",
-    "mths_since_last_delinq": "Meses desde la última mora", "open_acc": "Créditos abiertos",
-    "pub_rec": "Registros públicos", "revol_bal": "Saldo rotativo",
-    "revol_util": "Uso del cupo rotativo", "total_acc": "Total de créditos",
-    "antig_credito_meses": "Antigüedad crediticia", "home_ownership": "Vivienda",
-    "purpose": "Propósito",
-}
 
 
 def importancia_permutacion(modelo, X, y, repeticiones, semilla):

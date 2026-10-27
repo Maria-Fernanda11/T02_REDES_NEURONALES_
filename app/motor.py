@@ -1,0 +1,166 @@
+"""
+Lógica de la aplicación web, separada de la interfaz para poder probarla con pytest.
+
+Carga un modelo guardado por entrenar_pd.py (no reentrena) y, para un solicitante:
+    - arma su fila de entrada con las mismas columnas del entrenamiento,
+    - calcula PD, puntaje y percentil frente a la población,
+    - reparte el puntaje en puntos por variable (src/scorecard.py),
+    - recalcula el puntaje si cambia una característica ("¿y si...?").
+"""
+
+import configparser
+import json
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+import joblib
+import numpy as np
+import pandas as pd
+
+RAIZ = Path(__file__).resolve().parents[1]
+if str(RAIZ) not in sys.path:
+    sys.path.insert(0, str(RAIZ))
+
+from src.preprocesamiento import INDICADOR_DE  # noqa: E402
+from src.red_neuronal import RedNeuronal  # noqa: E402
+from src.scorecard import Scorecard, percentil, puntos_por_variable  # noqa: E402
+from src.variables import NOMBRES, PROPOSITOS, VIVIENDA  # noqa: E402
+
+
+@dataclass(frozen=True)
+class Campo:
+    """Cómo se pide una variable en el formulario y en el simulador."""
+    etiqueta: str
+    ayuda: str
+    minimo: float = 0
+    maximo: float = 1
+    paso: float = 1
+    defecto: float = 0
+    opciones: dict | None = None       # categóricas: valor del modelo -> texto
+    unidad: str = ""
+
+
+# Rangos dentro de lo visto en entrenamiento (metadata["rangos"]); dti se limita a 29.99
+# porque el modelo nunca vio valores mayores y la red los extrapola mal.
+CAMPOS = {
+    "loan_amnt": Campo("Monto que necesitas", "Monto del préstamo solicitado, en dólares.",
+                       500, 35000, 500, 10000, unidad="USD"),
+    "purpose": Campo("¿Para qué es el crédito?", "Finalidad declarada del préstamo.",
+                     defecto="debt_consolidation", opciones=PROPOSITOS),
+    "annual_inc": Campo("Ingreso anual", "Ingreso anual que declaras, en dólares.",
+                        2000, 1_000_000, 1000, 56000, unidad="USD"),
+    "emp_length": Campo("Años en tu empleo actual", "0 = menos de un año; 10 = diez años o más.",
+                        0, 10, 1, 5, unidad="años"),
+    "home_ownership": Campo("Tu vivienda", "Situación de vivienda.", defecto="RENT", opciones=VIVIENDA),
+    "dti": Campo("Deuda mensual / ingreso mensual (%)",
+                 "De cada 100 dólares que ganas al mes, cuántos van a pagar deudas "
+                 "(sin hipoteca ni este crédito). El modelo se entrenó con valores hasta 30 %.",
+                 0, 29.9, 0.1, 13, unidad="%"),
+    "revol_bal": Campo("Saldo en tarjetas y cupos rotativos", "Lo que debes hoy en tarjetas y líneas rotativas.",
+                       0, 300_000, 500, 8000, unidad="USD"),
+    "revol_util": Campo("Uso de tu cupo rotativo (%)", "Qué porcentaje de tu cupo total de tarjetas estás usando.",
+                        0, 100, 1, 48, unidad="%"),
+    "open_acc": Campo("Créditos abiertos hoy", "Número de líneas de crédito abiertas.", 1, 40, 1, 9),
+    "total_acc": Campo("Créditos en todo tu historial", "Total de líneas de crédito en tu historial.", 1, 90, 1, 20),
+    "antig_credito_meses": Campo("Años desde tu primer crédito", "Antigüedad de tu línea de crédito más antigua.",
+                                 1, 60, 1, 12, unidad="años"),
+    "inq_last_6mths": Campo("Consultas a tu historial en 6 meses",
+                            "Cuántas veces entidades consultaron tu historial (sin créditos de vivienda o vehículo).",
+                            0, 10, 1, 1),
+    "delinq_2yrs": Campo("Moras de 30+ días en los últimos 2 años", "Episodios de atraso de 30 días o más.",
+                         0, 10, 1, 0),
+    "mths_since_last_delinq": Campo("Meses desde tu última mora", "Si nunca has estado en mora, déjalo vacío.",
+                                    0, 120, 1, 36, unidad="meses"),
+    "pub_rec": Campo("Registros públicos negativos", "Quiebras, embargos o sentencias en tu contra.",
+                     defecto=0, opciones={0: "Ninguno", 1: "Uno", 2: "Dos o más"}),
+}
+
+# Bandas por percentil de la población, de mejor a peor. El color de estado va siempre con
+# ícono y texto, nunca solo.
+BANDAS = [
+    (80, "Excelente", "#0ca30c", "✔"),
+    (60, "Bueno", "#0ca30c", "✔"),
+    (40, "Promedio", "#fab219", "●"),
+    (20, "Por mejorar", "#ec835a", "▲"),
+    (0, "Riesgo alto", "#d03b3b", "✖"),
+]
+
+
+def leer_config_app(ruta=RAIZ / "config.ini"):
+    lector = configparser.ConfigParser(inline_comment_prefixes=("#",), interpolation=None)
+    lector.read(ruta, encoding="utf-8")
+    seccion = lector["app"] if lector.has_section("app") else {}
+    return {
+        "modelo": seccion.get("modelo", "models/pd_logistica"),
+        "modelo_comparacion": seccion.get("modelo_comparacion", "models/pd"),
+        "enlace_reporte": seccion.get("enlace_reporte", "").strip(),
+        "enlace_video": seccion.get("enlace_video", "").strip(),
+        "enlace_repositorio": seccion.get("enlace_repositorio", "").strip(),
+    }
+
+
+def banda(pct):
+    return next(b for b in BANDAS if pct >= b[0])
+
+
+class Modelo:
+    def __init__(self, carpeta):
+        carpeta = Path(carpeta)
+        if not carpeta.is_absolute():
+            carpeta = RAIZ / carpeta
+        self.metadata = json.loads((carpeta / "metadata.json").read_text(encoding="utf-8"))
+        self.red = RedNeuronal.cargar(carpeta / "red.npz")
+        self.preprocesador = joblib.load(carpeta / "preprocesador.joblib")
+        self.scorecard = Scorecard(**self.metadata["config"]["scorecard"])
+        self.poblacion = np.sort(np.load(carpeta / "puntajes_poblacion.npy"))
+        self.referencia = np.array(self.metadata["referencia_transformada"])
+        capas = self.metadata["config"]["red"]["capas_ocultas"]
+        self.es_logistica = not capas
+        self.nombre = "Regresión logística" if self.es_logistica else "Red neuronal " + "-".join(map(str, capas))
+
+    @property
+    def columnas(self):
+        return list(self.preprocesador.feature_names_in_)
+
+    def filas(self, entradas):
+        """DataFrame con las columnas del modelo a partir de uno o varios diccionarios.
+        Un valor vacío (None/NaN) en antigüedad laboral o en meses desde la última mora
+        enciende su indicadora, igual que en la limpieza de los datos."""
+        df = pd.DataFrame([entradas] if isinstance(entradas, dict) else list(entradas))
+        for indicador, variable in INDICADOR_DE.items():
+            df[variable] = pd.to_numeric(df[variable], errors="coerce")
+            df[indicador] = df[variable].isna().astype(int)
+        return df[self.columnas]
+
+    def evaluar(self, entradas):
+        X = self.preprocesador.transform(self.filas(entradas))
+        pd_est = self.red.predecir(X)
+        puntaje = self.scorecard.puntaje(pd_est)
+        pct = np.array([percentil(s, self.poblacion) for s in puntaje])
+        return pd.DataFrame({"pd": pd_est, "puntaje": puntaje, "percentil": pct})
+
+    def puntos(self, entradas):
+        """Puntos de cada variable frente al solicitante promedio, de mayor a menor efecto."""
+        X = self.preprocesador.transform(self.filas(entradas))
+        base, puntos, interaccion = puntos_por_variable(self.red, self.scorecard, X, self.referencia,
+                                                        self.preprocesador.grupos())
+        serie = puntos.iloc[0].rename(index=NOMBRES)
+        return base, serie.reindex(serie.abs().sort_values(ascending=False).index), float(interaccion[0])
+
+    def barrido(self, entradas, variable, valores):
+        """Puntaje del solicitante si la variable tomara cada uno de los valores."""
+        filas = [{**entradas, variable: v} for v in valores]
+        return self.evaluar(filas)["puntaje"].to_numpy()
+
+    def resumen_poblacion(self):
+        return {"n": len(self.poblacion), "mediana": float(np.median(self.poblacion)),
+                "p05": float(np.percentile(self.poblacion, 5)), "p95": float(np.percentile(self.poblacion, 95))}
+
+
+def solicitante_por_defecto():
+    """Valores iniciales del formulario: un solicitante típico de entrenamiento."""
+    valores = {k: c.defecto for k, c in CAMPOS.items()}
+    valores["antig_credito_meses"] = CAMPOS["antig_credito_meses"].defecto * 12
+    valores["mths_since_last_delinq"] = None          # nunca ha estado en mora (lo más frecuente)
+    return valores

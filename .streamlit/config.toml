@@ -1,0 +1,14 @@
+# Tema de la aplicación web (estilo bancario: azul marino, superficies claras)
+[theme]
+base = "light"
+primaryColor = "#0b4f9c"
+backgroundColor = "#f4f6f9"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#0b1f33"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

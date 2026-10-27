@@ -24,9 +24,9 @@ import numpy as np
 import pandas as pd
 
 from evaluar_pd import cargar_modelo
-from interpretar_pd import NOMBRES
 from src.preprocesamiento import INDICADOR_DE
 from src.scorecard import Scorecard, puntos_por_variable
+from src.variables import NOMBRES
 
 CUANTILES = [0.05, 0.25, 0.50, 0.75, 0.95]
 
