@@ -102,10 +102,12 @@ datos/             datos originales de Kaggle (no se suben al repo)
 data/processed/    datos procesados que usan los modelos
 src/               código: limpieza, red neuronal, scorecard, métricas
 models/            modelos entrenados (la app los carga sin reentrenar)
+reports/           resultados de la Parte 1 (búsqueda, semillas, evaluación, scorecard)
+reports/figures/   figuras regenerables con evaluar_pd.py e interpretar_pd.py
 ```
 
 ## Red neuronal del punto 2
 
 Para preparar la LGD desde `loan.csv` y entrenar con la red de Manuel, consulte [Punto_2/RED_NEURONAL.md](Punto_2/RED_NEURONAL.md).
 
-La aplicación web y la generación de figuras quedan pendientes de implementación; no se incluyen carpetas vacías ni dependencias para esas funcionalidades futuras.
+La aplicación web queda pendiente de implementación; no se incluyen carpetas vacías ni dependencias para ella todavía.

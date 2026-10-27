@@ -256,7 +256,7 @@
   "parametros_entrenables": 31,
   "mejor_epoca": 58,
   "epocas_entrenadas": 68,
-  "segundos_entrenamiento": 1.7729913029997988,
+  "segundos_entrenamiento": 1.7075679869994929,
   "metricas": {
     "train": {
       "auc": 0.6813057949030532,
