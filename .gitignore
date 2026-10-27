@@ -38,3 +38,6 @@ Punto_2/loan/loan.csv
 
 # Datos originales de Kaggle (pesan demasiado; ver README)
 datos/
+
+# Caché local de las pruebas
+.pytest_cache/
